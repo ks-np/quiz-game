@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DM Quiz Game</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  
+body {
+  font-family: 'Prompt', sans-serif;
+  background: linear-gradient(135deg, #e8f5e9, #f1f8ff);
+  margin: 0;
+}
+
+button, input, select, textarea {
+  font-family: 'Prompt', sans-serif;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  margin-top: 20px;
+  animation: fadeIn 0.4s ease;
+}
+
+h1 {
+  text-align: center;
+  color: #2e7d32;
+  text-shadow: 0 2px 10px rgba(46,125,50,0.2);
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4CAF50, #66bb6a);
+  color: white;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.choice {
+  background: #f1f1f1;
+  color: black;
+}
+
+.choice.selected {
+  background: #4CAF50;
+  color: white;
+}
+
+.choice.wrong {
+  background: #e53935;
+  color: white;
+}
+
+.timer {
+  font-size: 18px;
+  color: #e53935;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: #eee;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.progress {
+  height: 100%;
+  width: 0%;
+  background: #4CAF50;
+  border-radius: 10px;
+  transition: 0.3s;
+}
+
+.hidden {
+  display: none;
+}
+
+.result-score {
+  font-size: 32px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+@keyframes fadeIn {
+  from {opacity:0; transform: translateY(10px);}
+  to {opacity:1;}
+}
+
+.popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.popup.show {
+  display: flex;
+}
+
+.popup-box {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  text-align: center;
+  width: 80%;
+  max-width: 300px;
+  animation: fadeIn 0.3s ease;
+}
+
+.popup-box button {
+  margin-top: 15px;
+  background: #4CAF50;
+}
+
+.popup-box.correct {
+  border: 3px solid #4CAF50;
+}
+
+.popup-box.wrong {
+  border: 3px solid #e53935;
+}
+
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.9);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading.show {
+  display: flex;
+}
+
+.loading-box {
+  text-align: center;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #ddd;
+  border-top: 5px solid #4CAF50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
+#countText {
+  font-size: 10vw;
+  font-weight: bold;
+  color: #000000;
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+.timer.danger {
+  animation: blink 0.5s infinite;
+  color: #e53935;
+}
+
+#leaderboardList div {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  background: #f9fbff;
+  transition: 0.2s;
+}
+
+#leaderboardList div:hover {
+  background: #e3f2fd;
+}
+
+.active-level {
+  background: #2e7d32 !important;
+}
+
+.btn-score {
+  background: linear-gradient(135deg, #1e88e5, #42a5f5);
+  box-shadow: 0 6px 15px rgba(30,136,229,0.4);
+}
+
+.btn-score:active {
+  transform: scale(0.97);
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
+
+.back-btn {
+  font-size: 26px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.back-btn:hover {
+  background: #eee;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* 🔥 ปรับตรงนี้ได้เลย */
+}
+
+.logo {
+  font-size: 36px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+}
+
+#leaderboardList div:nth-child(1) {
+  background: #fff8e1;
+}
+
+#leaderboardList div:nth-child(2) {
+  background: #e3f2fd;
+}
+
+#leaderboardList div:nth-child(3) {
+  background: #fce4ec;
+}
+
+#boardLoading {
+  margin-top: 20px;
+}
+
+#leaderboardList {
+  transition: 0.2s;
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+
+
+<!-- MENU -->
+<div id="menu" class="card">
+  <h1 class="title">
+    <span class="logo">🧠</span>
+    <span>DM Quiz</span>
+  </h1>
+
+  <h2>เลือกระดับ</h2>
+  <button onclick="startGame('easy')">🟢 ง่าย</button>
+  <button onclick="startGame('medium')">🟡 ปานกลาง</button>
+  <button onclick="startGame('hard')">🔴 ยาก</button>
+  <button class="btn-score" onclick="showLeaderboard()">🏆 ดูคะแนน</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="card hidden">
+
+  <div class="progress-bar">
+    <div id="progress" class="progress"></div>
+  </div>
+
+  <div class="timer">⏱ <span id="timer">30</span> วินาที</div>
+
+  <h3 id="question"></h3>
+
+  <button class="choice" onclick="answer(0)" id="c0"></button>
+  <button class="choice" onclick="answer(1)" id="c1"></button>
+  <button class="choice" onclick="answer(2)" id="c2"></button>
+  <button class="choice" onclick="answer(3)" id="c3"></button>
+
+</div>
+
+<!-- RESULT -->
+<div id="result" class="card hidden">
+  <h2>🎉 เสร็จแล้ว!</h2>
+  <div class="result-score" id="scoreText"></div>
+  <button onclick="location.reload()">เล่นใหม่</button>
+</div>
+
+</div>
+
+<div id="popup" class="popup hidden">
+  <div class="popup-box">
+    <div id="popupText"></div>
+    <button onclick="closePopup()">ตกลง</button>
+  </div>
+</div>
+
+<div id="loading" class="loading hidden">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p>กำลังโหลด Quiz...</p>
+  </div>
+</div>
+
+<div id="countdown" class="loading hidden">
+  <div class="loading-box">
+    <h2 id="countText">เตรียมพร้อม!!</h2>
+  </div>
+</div>
+
+<div id="leaderboard" class="card hidden">
+
+  <h1 class="title">
+    <span class="logo">🧠</span>
+    <span>DM Quiz</span>
+  </h1>
+
+  <div class="top-bar">
+    <span class="back-btn" onclick="backToMenu()">&lt;</span>
+    <h2 style="font-weight:600;">🏆 อันดับคะแนน</h2>
+    <span></span>
+  </div>
+
+  <!-- 🔥 ปุ่มเลือกเลเวล -->
+  <div style="display:flex; gap:8px;">
+    <button onclick="loadBoard('easy'); setActive(event)">ง่าย</button>
+    <button onclick="loadBoard('medium'); setActive(event)">ปานกลาง</button>
+    <button onclick="loadBoard('hard'); setActive(event)">ยาก</button>
+  </div>
+
+  <div id="leaderboardList" style="margin-top:15px;"></div>
+
+  <!-- 🔥 loading เฉพาะตาราง -->
+  <div id="boardLoading" style="text-align:center; padding:20px; display:none;">
+    <div class="spinner"></div>
+  </div>
+
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxtMBEhQg4VvqCVJJOLQuZlgxBVLRtDS_wSnQjK_78bw2lmOiavpT5-VqiP7XBscec_/exec";
+
+let questions = [];
+let current = 0;
+let score = 0;
+let timer;
+let timeLeft = 30;
+let currentLevel = "";
+let userName = "Guest";
+let userId = "guest";
+
+async function startGame(level) {
+  currentLevel = level;
+
+  showLoading();
+
+  document.getElementById("menu").classList.add("hidden");
+
+  try {
+    const res = await fetch(GAS_URL + "?action=getQuestions&level=" + level);
+    questions = await res.json();
+
+    await new Promise(r => setTimeout(r, 500)); // smooth
+
+    hideLoading();
+
+    await startCountdown(); // 🔥 เพิ่มตรงนี้
+
+    document.getElementById("quiz").classList.remove("hidden");
+
+    showQuestion();
+
+  } catch (err) {
+    hideLoading();
+    showPopup("โหลดข้อมูลไม่สำเร็จ");
+  }
+}
+
+function showQuestion() {
+  if (current >= questions.length) {
+    finishGame();
+    return;
+  }
+
+  resetChoices();
+
+  const q = questions[current];
+
+  document.getElementById("question").innerText = (current+1) + ". " + q.question;
+
+  q.choices.forEach((c, i) => {
+    document.getElementById("c"+i).innerText = c;
+  });
+
+  updateProgress();
+  startTimer();
+}
+
+function resetChoices() {
+  for (let i=0;i<4;i++){
+    document.getElementById("c"+i).className = "choice";
+  }
+}
+
+function updateProgress() {
+  const percent = ((current)/questions.length)*100;
+  document.getElementById("progress").style.width = percent + "%";
+}
+
+function startTimer() {
+  timeLeft = 30;
+
+  const timerEl = document.querySelector(".timer");
+  timerEl.classList.remove("danger");
+
+  document.getElementById("timer").innerText = timeLeft;
+
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("timer").innerText = timeLeft;
+
+    // 🔥 เหลือ 10 วิ → เริ่มกระพริบ
+    if (timeLeft <= 10) {
+      timerEl.classList.add("danger");
+    }
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+
+      const q = questions[current];
+      const correctIndex = ["A","B","C","D"].indexOf(q.correct);
+
+      document.getElementById("c"+correctIndex).classList.add("selected");
+
+      showPopup("⏰ หมดเวลา!\n\n" + q.explanation, false);
+    }
+
+  }, 1000);
+}
+
+function answer(index) {
+  clearInterval(timer);
+
+  const q = questions[current];
+  const correctIndex = ["A","B","C","D"].indexOf(q.correct);
+
+  if (index === correctIndex) {
+    document.getElementById("c"+index).classList.add("selected");
+    score += 10 + Math.floor(timeLeft / 2);
+  } else {
+    document.getElementById("c"+index).classList.add("wrong");
+    document.getElementById("c"+correctIndex).classList.add("selected");
+  }
+
+  setTimeout(()=>{
+    if (index === correctIndex) {
+      showPopup("✅ ถูกต้องนะครับ!\n\n" + q.explanation, true);
+    } else {
+      showPopup("❌ ยังไม่ถูกนะครับ\n\n" + q.explanation, false);
+    }
+  }, 500);
+
+}
+
+function nextQuestion() {
+  current++;
+  showQuestion();
+}
+
+function finishGame() {
+  document.getElementById("quiz").classList.add("hidden");
+  document.getElementById("result").classList.remove("hidden");
+
+  document.getElementById("scoreText").innerText = score + " คะแนน";
+
+  fetch(GAS_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "saveScore",
+      score: score,
+      level: currentLevel,
+      name: userName,
+      userId: userId
+    })
+  });
+}
+
+function showPopup(text, isCorrect) {
+  const box = document.querySelector(".popup-box");
+
+  box.classList.remove("correct", "wrong");
+
+  if (isCorrect) {
+    box.classList.add("correct");
+  } else {
+    box.classList.add("wrong");
+  }
+
+  if (text.includes("หมดเวลา")) {
+    box.classList.add("wrong");
+  }
+
+  document.getElementById("popupText").innerText = text;
+  document.getElementById("popup").classList.add("show");
+}
+
+function closePopup() {
+  document.getElementById("popup").classList.remove("show");
+  nextQuestion(); // 🔥 ไปข้อถัดไปตรงนี้
+}
+
+function showLoading() {
+  document.getElementById("loading").classList.add("show");
+}
+
+function hideLoading() {
+  document.getElementById("loading").classList.remove("show");
+}
+
+async function startCountdown() {
+  const el = document.getElementById("countdown");
+  const text = document.getElementById("countText");
+
+  el.classList.add("show");
+
+  // เตรียมพร้อม
+  text.innerText = "เตรียมพร้อม!!";
+  await sleep(1000);
+
+  // นับถอยหลัง
+  for (let i = 5; i > 0; i--) {
+    text.innerText = i;
+    text.style.animation = "none";
+    void text.offsetWidth;
+    text.style.animation = "pop 0.4s ease";
+
+    await sleep(1000);
+  }
+
+  // เริ่ม!
+  text.innerText = "เริ่มได้!!!";
+
+  await sleep(1300);
+
+  el.classList.remove("show");
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function showLeaderboard() {
+  document.getElementById("menu").classList.add("hidden");
+  document.getElementById("leaderboard").classList.remove("hidden");
+
+  // reset ปุ่ม
+  const buttons = document.querySelectorAll("#leaderboard button");
+  buttons.forEach(btn => btn.classList.remove("active-level"));
+  buttons[0].classList.add("active-level");
+
+  await loadBoard("easy");
+
+}
+
+function backToMenu() {
+  document.getElementById("leaderboard").classList.add("hidden");
+  document.getElementById("menu").classList.remove("hidden");
+}
+
+async function loadBoard(level) {
+  document.getElementById("leaderboardList").style.opacity = 0.3;
+  // 🔥 แสดง spinner เฉพาะตาราง
+  document.getElementById("boardLoading").style.display = "block";
+  document.getElementById("leaderboardList").innerHTML = "";
+
+  const res = await fetch(GAS_URL + "?action=getLeaderboard&level=" + level);
+  const data = await res.json();
+
+  let html = "";
+
+  if (data.length === 0) {
+    html = "<p>ยังไม่มีคะแนน</p>";
+  } else {
+    data.forEach((row, i) => {
+      let medal = "";
+      if (i === 0) medal = "🥇";
+      else if (i === 1) medal = "🥈";
+      else if (i === 2) medal = "🥉";
+
+      html += `
+        <div>
+          <span>${medal} ${i+1} ${row[1] || "Guest"}</span>
+          <span>${row[3]} คะแนน</span>
+        </div>
+      `;
+    });
+  }
+
+  // 🔥 ซ่อน spinner
+  document.getElementById("boardLoading").style.display = "none";
+
+  document.getElementById("leaderboardList").innerHTML = html;
+
+  document.getElementById("leaderboardList").style.opacity = 1;
+
+}
+
+function setActive(e) {
+  document.querySelectorAll("#leaderboard button").forEach(btn => {
+    btn.classList.remove("active-level");
+  });
+
+  e.target.classList.add("active-level");
+}
+
+async function initLiff() {
+  await liff.init({ liffId: "YOUR_LIFF_ID" });
+
+  if (liff.isLoggedIn()) {
+    const profile = await liff.getProfile();
+    userName = profile.displayName;
+    userId = profile.userId;
+  } else {
+    liff.login();
+  }
+}
+
+initLiff();
+
+</script>
+
+</body>
+</html>
