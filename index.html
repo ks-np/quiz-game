@@ -308,6 +308,45 @@ button:active {
   transition: 0.2s;
 }
 
+.result-title {
+  text-align: center;
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+.score-box {
+  background: linear-gradient(135deg, #4CAF50, #66bb6a);
+  color: white;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.score-number {
+  font-size: 48px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.best-box {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.best-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
 </style>
 </head>
 
@@ -356,8 +395,16 @@ button:active {
   </div>
 
   <div id="resultContent" style="display:none;">
-    <h2>🎉 คำนวนคะแนนเสร็จแล้ว!</h2>
-    <div class="result-score" id="scoreText"></div>
+    <h2 class="result-title">🎉 คำนวณคะแนนเสร็จแล้ว!</h2>
+    <div class="score-box">
+        <div class="label">🎯 คะแนนของคุณ</div>
+        <div class="score-number" id="scoreNumber">0</div>
+    </div>
+
+    <div class="best-box">
+        <div class="label">🏆 สถิติสูงสุด</div>
+        <div class="best-number" id="bestScore">0</div>
+    </div>
     <button onclick="location.reload()">เล่นใหม่</button>
   </div>
 
@@ -572,24 +619,24 @@ async function finishGame() {
 
     if (data.status === "new_high") {
     text = `
-    🎉 คะแนนของคุณ: ${score}
+    🎉 คะแนนของคุณ : ${score}
 
     🔥 NEW HIGH SCORE!
     `;
     } else {
     text = `
-    🎉 คะแนนของคุณ: ${score}
+    🎉 คะแนนของคุณ : ${score}
 
-    🏆 สถิติสูงสุด: ${data.best}
+    🏆 สถิติสูงสุด : ${data.best}
     `;
     }
 
-  document.getElementById("scoreText").innerText = text;
+    animateScore("scoreNumber", score);
+    animateScore("bestScore", data.best);
 
     if (data.status === "new_high") {
-        document.getElementById("scoreText").style.color = "#ff9800"; // สีทอง
-    } else {
-        document.getElementById("scoreText").style.color = "#4CAF50"; // สีเขียวเดิม
+    document.querySelector(".score-box").style.background =
+        "linear-gradient(135deg, #ff9800, #ffc107)";
     }
 
   // 👇 สลับมาโชว์ผล
@@ -735,6 +782,23 @@ function setActive(e) {
   });
 
   e.target.classList.add("active-level");
+}
+
+function animateScore(id, end) {
+  let start = 0;
+  const duration = 800;
+  const step = end / 30;
+  const el = document.getElementById(id);
+
+  let interval = setInterval(() => {
+    start += step;
+    if (start >= end) {
+      el.innerText = end;
+      clearInterval(interval);
+    } else {
+      el.innerText = Math.floor(start);
+    }
+  }, 20);
 }
 
 async function initLiff() {
