@@ -409,6 +409,7 @@ let timeLeft = 30;
 let currentLevel = "";
 let userName = "Guest";
 let userId = "guest";
+let isBoardLoading = false;
 
 async function startGame(level) {
   currentLevel = level;
@@ -528,13 +529,12 @@ function nextQuestion() {
   showQuestion();
 }
 
-function finishGame() {
+async function finishGame() {
+
   document.getElementById("quiz").classList.add("hidden");
   document.getElementById("result").classList.remove("hidden");
 
-  document.getElementById("scoreText").innerText = score + " คะแนน";
-
-  fetch(GAS_URL, {
+  const res = await fetch(GAS_URL, {
     method: "POST",
     body: JSON.stringify({
       action: "saveScore",
@@ -544,6 +544,18 @@ function finishGame() {
       userId: userId
     })
   });
+
+  const data = await res.json();
+
+  let text = `🎉 คะแนนของคุณ: ${score}\n`;
+
+  if (data.status === "new_high") {
+    text += "🔥 ทำลายสถิติใหม่!\n";
+  } else {
+    text += `🏆 สถิติสูงสุด: ${data.best}`;
+  }
+
+  document.getElementById("scoreText").innerText = text;
 }
 
 function showPopup(text, isCorrect) {
@@ -629,8 +641,17 @@ function backToMenu() {
 }
 
 async function loadBoard(level) {
+
+  if (isBoardLoading) return; // ❗ กันกดรัว
+
+  isBoardLoading = true;
+
+  // 🔒 ปิดปุ่มทั้งหมดใน leaderboard
+  document.querySelectorAll("#leaderboard button").forEach(btn => {
+    btn.disabled = true;
+  });
+
   document.getElementById("leaderboardList").style.opacity = 0.3;
-  // 🔥 แสดง spinner เฉพาะตาราง
   document.getElementById("boardLoading").style.display = "block";
   document.getElementById("leaderboardList").innerHTML = "";
 
@@ -657,13 +678,16 @@ async function loadBoard(level) {
     });
   }
 
-  // 🔥 ซ่อน spinner
   document.getElementById("boardLoading").style.display = "none";
-
   document.getElementById("leaderboardList").innerHTML = html;
-
   document.getElementById("leaderboardList").style.opacity = 1;
 
+  // 🔓 เปิดปุ่มกลับ
+  document.querySelectorAll("#leaderboard button").forEach(btn => {
+    btn.disabled = false;
+  });
+
+  isBoardLoading = false;
 }
 
 function setActive(e) {
