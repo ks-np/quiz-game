@@ -102,9 +102,16 @@ button:active {
 }
 
 .result-score {
-  font-size: 32px;
+  font-size: 34px;
   font-weight: bold;
   color: #4CAF50;
+  animation: popScore 0.6s ease;
+}
+
+@keyframes popScore {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes fadeIn {
@@ -342,10 +349,17 @@ button:active {
 
 <!-- RESULT -->
 <div id="result" class="card hidden">
-  <h2>🎉 เสร็จแล้ว!</h2>
-  <div class="result-score" id="scoreText"></div>
-  <button onclick="location.reload()">เล่นใหม่</button>
-</div>
+
+  <div id="resultLoading" style="text-align:center; padding:30px;">
+    <div class="spinner"></div>
+    <p style="margin-top:10px;">กำลังคำนวณคะแนน...</p>
+  </div>
+
+  <div id="resultContent" style="display:none;">
+    <h2>🎉 คำนวนคะแนนเสร็จแล้ว!</h2>
+    <div class="result-score" id="scoreText"></div>
+    <button onclick="location.reload()">เล่นใหม่</button>
+  </div>
 
 </div>
 
@@ -534,6 +548,10 @@ async function finishGame() {
   document.getElementById("quiz").classList.add("hidden");
   document.getElementById("result").classList.remove("hidden");
 
+  // 👇 แสดง loading ก่อน
+  document.getElementById("resultLoading").style.display = "block";
+  document.getElementById("resultContent").style.display = "none";
+
   const res = await fetch(GAS_URL, {
     method: "POST",
     body: JSON.stringify({
@@ -547,15 +565,36 @@ async function finishGame() {
 
   const data = await res.json();
 
-  let text = `🎉 คะแนนของคุณ: ${score}\n`;
+  // 👇 หน่วงนิดนึงให้ฟีลเกม
+  await new Promise(r => setTimeout(r, 1200));
 
-  if (data.status === "new_high") {
-    text += "🔥 ทำลายสถิติใหม่!\n";
-  } else {
-    text += `🏆 สถิติสูงสุด: ${data.best}`;
-  }
+    let text = "";
+
+    if (data.status === "new_high") {
+    text = `
+    🎉 คะแนนของคุณ: ${score}
+
+    🔥 NEW HIGH SCORE!
+    `;
+    } else {
+    text = `
+    🎉 คะแนนของคุณ: ${score}
+
+    🏆 สถิติสูงสุด: ${data.best}
+    `;
+    }
 
   document.getElementById("scoreText").innerText = text;
+
+    if (data.status === "new_high") {
+        document.getElementById("scoreText").style.color = "#ff9800"; // สีทอง
+    } else {
+        document.getElementById("scoreText").style.color = "#4CAF50"; // สีเขียวเดิม
+    }
+
+  // 👇 สลับมาโชว์ผล
+  document.getElementById("resultLoading").style.display = "none";
+  document.getElementById("resultContent").style.display = "block";
 }
 
 function showPopup(text, isCorrect) {
